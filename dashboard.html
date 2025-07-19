@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="src/assets/style/output.css" />
+ 
+</head>
+<body class="body min-h-screen flex items-center justify-center">
+  <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+    <h1 class="text-3xl font-bold text-purple-700 text-center mb-6">Welcome to your dashboard</h1>
+
+    <div id="userInfo" class="space-y-3 text-gray-800">
+      <label class="block">
+        👤 Username:
+        <input id="username" class="w-full mt-1 p-2 border border-gray-300 rounded" />
+      </label>
+      <label class="block">
+        📧 Email:
+        <input id="email" class="w-full mt-1 p-2 border border-gray-300 rounded" />
+      </label>
+      <label class="block">
+        🔒 Password:
+        <input id="password" type="password" class="w-full mt-1 p-2 border border-gray-300 rounded" />
+      </label>
+    </div>
+
+    <div class="mt-6 space-y-3">
+      <button onclick="saveChanges()" class="w-full bg-[#573b8a] text-white py-2 rounded hover:bg-gray-600 transition">Save Changes</button>
+      <button onclick="deleteUser()" class="w-full bg-[#573b8a] text-white py-2 rounded hover:bg-gray-600 transition">Delete Account</button>
+      <button onclick="logout()" class="w-full bg-[#573b8a] text-white py-2 rounded hover:bg-gray-600 transition">Log out</button>
+    </div>
+  </div>
+
+  <script>
+    // گرفتن اطلاعات کاربر از localStorage
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+
+    if (!user) {
+      window.location.href = "index.html"; // هدایت به صفحه لاگین اگر لاگین نشده
+    } else {
+      // مقداردهی اولیه فیلدها با اطلاعات کاربر
+      document.getElementById("username").value = user.username;
+      document.getElementById("email").value = user.email;
+      document.getElementById("password").value = user.password;
+    }
+
+    // خروج از حساب کاربری
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "index.html";
+    }
+
+    // ذخیره تغییرات با ارسال PUT به API و بروزرسانی localStorage
+    function saveChanges() {
+      const newUsername = document.getElementById("username").value.trim();
+      const newEmail = document.getElementById("email").value.trim();
+      const newPassword = document.getElementById("password").value.trim();
+
+      if (!newUsername || !newEmail || !newPassword) {
+        alert("Please fill in all fields");
+        return;
+      }
+
+      const updatedUser = {
+        ...user,
+        username: newUsername,
+        email: newEmail,
+        password: newPassword
+      };
+
+      fetch(`https://6878eaa263f24f1fdca00119.mockapi.io/users/${user.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedUser)
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Error updating information");
+        return res.json();
+      })
+      .then(data => {
+        localStorage.setItem("loggedInUser", JSON.stringify(data));
+        alert("saved successfully✅");
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Error deleting account");
+      });
+    }
+
+    // حذف حساب کاربری با درخواست DELETE و حذف localStorage
+    function deleteUser() {
+      if (confirm("Are you sure you want to delete your account?")) {
+        fetch(`https://6878eaa263f24f1fdca00119.mockapi.io/users/${user.id}`, {
+          method: "DELETE"
+        })
+        .then(res => {
+          if (!res.ok) throw new Error("Error deleting account");
+          localStorage.removeItem("loggedInUser");
+          alert("Account deleted❌");
+          window.location.href = "index.html";
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Error deleting account");
+        });
+      }
+    }
+  </script>
+</body>
+</html>
